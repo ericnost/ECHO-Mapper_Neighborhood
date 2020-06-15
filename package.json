@@ -1,0 +1,24 @@
+{
+  "name": "ECHO Mapper",
+  "version": "1.0.0",
+  "description": "Tracking Environmental Enforcement and Compliance",
+  "main": "index.js",
+  "author": "Eric Nost",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "bootstrap": "^4.4.1",
+    "d3-scale": "^3.0.0",
+    "dotenv": "^7.0.0",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "jquery": "^3.4.0",
+    "leaflet": "^1.4.0",
+    "leaflet-draw": "^1.0.4",
+    "nprogress": "^0.2.0",
+    "pg": "^7.8.2"
+  }
+}

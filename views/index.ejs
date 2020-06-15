@@ -1,0 +1,124 @@
+<html lang="en">
+	<head>
+	    <title>ECHO Mapper: Tracking Environmental Enforcement and Compliance</title>
+	    <meta charset="utf-8">
+	    <script src="/jquery/dist/jquery.js"></script>
+	    <script src="/leaflet/dist/leaflet.js"></script>
+	    <link rel="stylesheet" href="/leaflet/dist/leaflet.css" />
+	    <script src="/nprogress/nprogress.js"></script>
+	    <link rel="stylesheet" href="/nprogress/nprogress.css"/>
+	    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css"/>
+	    <script src="https://cdn-geoweb.s3.amazonaws.com/esri-leaflet/0.0.1-beta.5/esri-leaflet.js"></script>
+	    <script src="https://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.5/esri-leaflet-geocoder.js"></script>
+	    <link rel="stylesheet" type="text/css" href="https://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.5/esri-leaflet-geocoder.css">
+	    <style>
+	    	body {
+	    		margin: 1%;
+	    	}
+		    .loaderImage{
+		      display: none;
+		      position: absolute;
+		      margin: auto;
+		      height: 50px;
+		      width: 50px;
+		      top: 40%;
+		      left: 50%;
+		      z-index: 99999;
+		    }
+	  	</style>
+	</head>
+
+  	<body>
+  
+		<div class="loaderImage"> </div>
+
+		<div><h3><em>e</em>nvironmental <em>e</em>nforcement <em>w</em>atch</h3></div>
+
+		<div class="container-fluid">
+		  	<div class="row">
+		    	<div class="col-12" id="map" style="height:80vh">
+		    	</div>
+		  	</div>
+		</div>
+  
+ <!-- <button onclick="post()">Submit</button>  -->
+    
+    <script>
+    NProgress.configure({ parent: '.loaderImage' });
+ 	
+    var data = <%- JSON.stringify(data) %>
+    
+    //set up map
+    var map =  L.map('map',{ center: [<%= clat %>,<%= clng %>], zoom: <%= zoom %>}); //, maxBoundsViscosity: .4
+
+    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', {
+            attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+
+    var popup = L.popup();
+	function onMapClick(e, resp) {
+		console.log(e,resp)
+	    popup
+	        .setLatLng(e.latlng)
+	        .setContent("You went to " + e.latlng.lat.toString().slice(0,5) +", "+ e.latlng.lng.toString().slice(0,5)+". There are "+resp.features.length+" facilities around here.")
+	        .openOn(map);
+	}
+
+	var layer;
+    var mapmaker = function(data){
+    	if (data.features) {
+    		layer = L.geoJSON( data, {
+    			pointToLayer: function (feature, latlng) {
+    				var c = feature.properties.f3 == 1 ? "red" : "black"
+    				var r = feature.properties.f4 > 0 ? 16 : 8
+            		return L.circleMarker(latlng).setStyle({fillColor: c, fillOpacity: .5, color: "black", weight: .5}).setRadius(r)
+    			}			
+			}).bindPopup(function (layer) {
+    			return "Name: "+layer.feature.properties.f1+"<br> In compliance? "+layer.feature.properties.f2+" <br> Number of enforcement actions taken: "+layer.feature.properties.f4
+    		}).addTo(map)
+    	}
+	}
+	mapmaker(data) //initial run
+
+	map.on('click', function(e){
+		console.log(e.latlng)
+
+		var zoom = map.getZoom()
+		
+		$('.loaderImage').show();
+	    NProgress.start()
+		
+		$.post("/map", {lat: e.latlng.lat, lng: e.latlng.lng, zoom: zoom}, function(resp) {
+	        map.removeLayer(layer);
+	        mapmaker(resp)
+		}).done(function(resp){
+				onMapClick(e,resp)
+				NProgress.done();$('.loaderImage').hide();
+			})
+	})
+    
+    var searchControl = new L.esri.Controls.Geosearch().addTo(map);
+
+	//var results = new L.LayerGroup().addTo(map);
+
+	searchControl.on('results', function(data){
+		console.log(data.latlng)
+
+		
+		var zoom = map.getZoom()
+		
+		$('.loaderImage').show();
+	    NProgress.start()
+		
+		$.post("/map", {lat: data.latlng.lat, lng: data.latlng.lng, zoom: zoom}, function(resp) {
+	        map.removeLayer(layer);
+	        mapmaker(resp)
+		}).done(function(resp){
+				onMapClick(data, resp)
+				map.setZoom(13)
+				NProgress.done();$('.loaderImage').hide();
+			})    
+	});
+		  
+  </script>
+</body>
+</html>
