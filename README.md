@@ -1,4 +1,4 @@
-# ECHO-Mapper
+# ECHO-Mapper-Neighborhood
  Using Express and Leaflet to show you EPA-regulated facilities in your neighborhood.
 ## Demo
  See here: https://www.youtube.com/watch?v=t8gdRIk1Alo
